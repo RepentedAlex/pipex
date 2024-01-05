@@ -1,12 +1,13 @@
+NAME		= pipex
+
 CC			= gcc
 CFLAGS		= -Wall -Wextra -Werror
 
-NAME		= pipex
 
 SRC_DIR		= src/
-OBJ_DIR		= build/
 
-SRC_FILES	= pipex.c
+SRC_FILES	= pipex.c \
+				utils.c
 
 SRC			= $(addprefix $(SRC_DIR), $(SRC_FILES))
 OBJ			= ${SRC:.c=.o}
@@ -14,10 +15,10 @@ OBJ			= ${SRC:.c=.o}
 RM			= rm -rf
 INCLUDE		= -I include
 
-all: $(NAME)
-
 $(NAME): $(OBJ)
-	@$(CC) $(CFLAGS)  $(OBJ) $(INCLUDE) -o $(NAME)
+	@$(CC) $(CFLAGS) $(OBJ) $(INCLUDE) -o $(NAME)
+
+all: $(NAME)
 
 clean:
 	@$(RM) $(OBJ)

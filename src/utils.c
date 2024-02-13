@@ -3,48 +3,93 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: apetitco <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: apetitco <apetitco@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/05 16:36:49 by apetitco          #+#    #+#             */
-/*   Updated: 2024/01/05 17:47:20 by apetitco         ###   ########.fr       */
+/*   Updated: 2024/02/13 20:29:30 by apetitco         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/pipex.h"
 
-int	open_file(char	*file, int io)
+char	*find_path(char *cmd, char *envp[])
 {
-	int	ret;
-
-	if (io == 0)
-		ret = open(file, O_RDONLY, 0777);
-	if (io == 1)
-		ret = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-	if (io == -1)
-		exit(0);
-	return (ret);
-}
-
-char	*get_env(char *name, char **envp)
-{
+	char	**paths;
+	char	*path;
 	int		i;
-	int		j;
-	char	*sub;
+	char	*part_path;
 
 	i = 0;
-	while (envp[i])
+	while (ft_strnstr(envp[i], "PATH", 4) == 0)
+		i++;
+	paths = ft_split(envp[i] + 5, ':');
+	i = 0;
+	while (paths[i])
 	{
-		j = 0;
-		while (envp[i][j] && envp[i][j] != '=')
-			j++;
-		sub = ft_substr(envp[i], 0, j);
-		if (strcmp(sub, name) == 0)
-		{
-			free(sub);
-			return (envp[i] + j + 1);
-		}
-		free(sub);
+		part_path = ft_strjoin(paths[i], "/");
+		path = ft_strjoin(part_path, cmd);
+		free(part_path);
+		if (access(path, F_OK) == 0)
+			return (path);
+		free(path);
 		i++;
 	}
-	return (NULL);
+	i = -1;
+	while (paths[++i])
+		free(paths[i]);
+	free(paths);
+	return (0);
+}
+
+void	error(void)
+{
+	perror("\033[31mError");
+	exit(EXIT_FAILURE);
+}
+
+void	execute(char *argv, char *envp[])
+{
+	char	**cmd;
+	int		i;
+	char	*path;
+
+	i = -1;
+	cmd = ft_split(argv, ' ');
+	path = find_path(cmd[0], envp);
+	if (!path)
+	{
+		while (cmd[++i])
+			free(cmd[i]);
+		free(cmd);
+		error();
+	}
+	if (execve(path, cmd, envp) == -1)
+		error();
+}
+
+int	get_next_line(char **line)
+{
+    char	*buffer;
+	int		i;
+	int		r;
+	char	c;
+
+	i = 0;
+	r = 0;
+	buffer = (char *)malloc(10000);
+	if (!buffer)
+		return (-1);
+	r = read(0, &c, 1);
+	while (r && c != '\n' && c != '\0')
+	{
+		if (c != '\n' && c != '\0')
+			buffer[i] = c;
+		i++;
+		r = read(0, &c, 1);
+	}
+	buffer[i] = '\n';
+	buffer[++i] = '\0';
+	*line = buffer;
+	free(buffer);
+	return (r);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipex.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: apetitco <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: apetitco <apetitco@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/01/05 16:41:26 by apetitco          #+#    #+#             */
-/*   Updated: 2024/01/05 17:43:22 by apetitco         ###   ########.fr       */
+/*   Updated: 2024/02/13 19:43:08 by apetitco         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,30 @@
 #define PIPEX_H
 
 #include <fcntl.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
-char	*get_env(char *name, char **envp);
-int	open_file(char	*file, int io);
+typedef enum s_bool
+{
+    flase,
+    true
+} t_bool;
+
+
+typedef struct s_pipex
+{
+    int     in_fd;
+    int     out_fd;
+    t_bool  here_doc;
+    t_bool  is_invalid_file;
+    char    **cmd_paths;
+    char    **cmd_args;
+    int     cmd_count;
+    t_pipex *next;
+} t_pipex;
+
 
 #endif

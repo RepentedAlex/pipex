@@ -12,84 +12,112 @@
 
 #include "../include/pipex.h"
 
-char	*find_path(char *cmd, char *envp[])
+/**
+ * 
+*/
+void	exit_handler(int n_exit)
 {
-	char	**paths;
-	char	*path;
+	if (n_exit == 1)
+	{
+		ft_putstr_fd("./pipex infile cmd1 cmd2 outfile\n", STDERR_FILENO);
+	}
+	exit(0);
+}
+
+/**
+ * 
+*/
+int	open_file(char *file, int io)
+{
+	int	ret;
+
+	if (io == STDIN_FILENO)
+	{
+		ret = open(file, O_RDONLY, 0777);
+	}
+	if (io == STDOUT_FILENO)
+	{
+		ret = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+	}
+	if (ret == -1)
+	{
+		exit(0);
+	}
+	return (ret);
+}
+
+/**
+ * 
+*/
+void	ft_free_tab(char **tab)
+{
+	size_t	i;
+
+	i = 0;
+	while (tab[i])
+	{
+		free(tab[i]);
+		i++;
+	}
+	free(tab);
+}
+
+/**
+ * 
+*/
+char	*ft_get_env(char *name, char *envp[])
+{
 	int		i;
+	int		j;
+	char	*sub;
+
+	i = 0;
+	while (envp[i])
+	{
+		j = 0;
+		while (envp[i][j] && envp[i][j] != '=')
+		{
+			j++;
+		}
+		sub = ft_substr(envp[i], 0, j);
+		if (ft_strcmp(sub, name) == 0)
+		{
+			free(sub);
+			return (envp[i] + j + 1);
+		}
+		free(sub);
+		i++;
+	}
+	return (NULL);
+}
+
+/**
+ * 
+*/
+char	*get_path(char *cmd, char *envp[])
+{
+	int		i;
+	char	*exec;
+	char	**all_paths;
 	char	*part_path;
+	char	**s_cmd;
 
-	i = 0;
-	while (ft_strnstr(envp[i], "PATH", 4) == 0)
-		i++;
-	paths = ft_split(envp[i] + 5, ':');
-	i = 0;
-	while (paths[i])
+	i = -1;
+	all_paths = ft_split(ft_get_env("PATH", envp), ':');
+	s_cmd = ft_split(cmd, ' ');
+	while (all_paths[++i])
 	{
-		part_path = ft_strjoin(paths[i], "/");
-		path = ft_strjoin(part_path, cmd);
+		part_path = ft_strjoin(all_paths[i], "/");
+		exec = ft_strjoin(part_path, s_cmd[0]);
 		free(part_path);
-		if (access(path, F_OK) == 0)
-			return (path);
-		free(path);
-		i++;
+		if (access(exec, F_OK | X_OK) == 0)
+		{
+			ft_free_tab(s_cmd);
+			return (exec);
+		}
+		free(exec);
 	}
-	i = -1;
-	while (paths[++i])
-		free(paths[i]);
-	free(paths);
-	return (0);
-}
-
-void	error(void)
-{
-	perror("\033[31mError");
-	exit(EXIT_FAILURE);
-}
-
-void	execute(char *argv, char *envp[])
-{
-	char	**cmd;
-	int		i;
-	char	*path;
-
-	i = -1;
-	cmd = ft_split(argv, ' ');
-	path = find_path(cmd[0], envp);
-	if (!path)
-	{
-		while (cmd[++i])
-			free(cmd[i]);
-		free(cmd);
-		error();
-	}
-	if (execve(path, cmd, envp) == -1)
-		error();
-}
-
-int	get_next_line(char **line)
-{
-    char	*buffer;
-	int		i;
-	int		r;
-	char	c;
-
-	i = 0;
-	r = 0;
-	buffer = (char *)malloc(10000);
-	if (!buffer)
-		return (-1);
-	r = read(0, &c, 1);
-	while (r && c != '\n' && c != '\0')
-	{
-		if (c != '\n' && c != '\0')
-			buffer[i] = c;
-		i++;
-		r = read(0, &c, 1);
-	}
-	buffer[i] = '\n';
-	buffer[++i] = '\0';
-	*line = buffer;
-	free(buffer);
-	return (r);
+	ft_free_tab(all_paths);
+	ft_free_tab(s_cmd);
+	return (cmd);
 }
